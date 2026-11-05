@@ -305,7 +305,8 @@ function otroLabel(){var t=(S.R.F2_otro||"").trim(); return t?t:"Otro destino";}
 function f2raw(){return arr(S.R.F2).filter(function(x){return x!==NOVIAJE;});}
 function lbl(x){return x===OTRO?otroLabel():x;}
 function f2list(){return f2raw().map(lbl);}
-function destino(){var l=f2raw(); if(l.length===1) return lbl(l[0]); if(l.length>1&&l.indexOf(S.R.F3)>-1) return lbl(S.R.F3); return null;}
+function prio(){var l=f2raw(),d=l.filter(function(x){return DEST.indexOf(x)>-1;});return d.length?d:l;}
+function destino(){var l=prio(); if(l.length===1) return lbl(l[0]); if(l.length>1&&l.indexOf(S.R.F3)>-1) return lbl(S.R.F3); return null;}
 function turista(){return f2list().length>0;}
 function f2Respondida(){return arr(S.R.F2).length>0;}
 function fuera(){return !!S.R.F1&&f2Respondida()&&!residente()&&!turista();}
@@ -313,7 +314,7 @@ function t8(){return arr(S.R.T8);}
 var COND={
   residente:residente, turista:turista,
   f1_respondida:function(){return !!S.R.F1;},
-  f2_varios:function(){return f2list().length>1;},
+  f2_varios:function(){return prio().length>1;},
   f2_otro:function(){return arr(S.R.F2).indexOf(OTRO)>-1;},
   viajo:function(){return turista();},
   no_residente:function(){return !residente();},
@@ -335,7 +336,7 @@ function fill(t){
 }
 function opts(f){
   if(f.options==="F2_DYN"){return DEST.filter(function(d){return d!==S.R.F1;}).concat([OTRO,NOVIAJE]);}
-  if(f.options==="F3_DYN"){return f2raw();}
+  if(f.options==="F3_DYN"){return prio();}
   if(f.options==="ZONA_DYN"){return (Q.zonas||{})[destino()]||[];}
   return f.options;
 }
@@ -558,7 +559,7 @@ document.addEventListener("click",function(e){
       S.R[f]=cur;
     } else S.R[f]=val;
     if(f==="F1"){ S.R.F2=arr(S.R.F2).filter(function(x){return x!==val;}); }
-    if(f==="F2"&&f2raw().indexOf(S.R.F3)<0) S.R.F3="";
+    if(f==="F2"&&prio().indexOf(S.R.F3)<0) S.R.F3="";
     if(f==="F1"||f==="F2"||f==="F3"){ if(((Q.zonas||{})[destino()]||[]).indexOf(S.R.T6Z)<0) S.R.T6Z=""; }
     // si cambia algo que define el recorrido, los pasos siguientes se vuelven a habilitar de a uno
     if(STRUCT[f]){ var vs=visibleSteps(), i=curIndex(vs); S.visited={}; vs.slice(0,i+1).forEach(function(s){S.visited[s.id]=true;}); }
@@ -594,7 +595,7 @@ function payload(){
   var f2=arr(S.R.F2).map(function(x){return x===OTRO?"Otro: "+otroLabel():x;}); r.F2=f2.join("; ");
   r.B0=turista()?"Sí":"No";
   Q.f2cols.forEach(function(c,i){r[c]=f2.indexOf(DEST[i])>-1?1:0;});
-  if(f2raw().length>1) r.F3=S.R.F3?lbl(S.R.F3):"";
+  if(prio().length>1) r.F3=S.R.F3?lbl(S.R.F3):"";
   r.Ciudad_evaluada=residente()?S.R.F1:""; r.Destino_evaluado=destino()||"";
   if(fuera()){ r.Estado="Fuera del estudio"; return r; }
   visibleSteps().forEach(function(st){ if(!st.data||st.data.section==="F") return;
